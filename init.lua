@@ -162,6 +162,7 @@ end
 
 minetest.register_entity("rangedweapons:empty_shell", rangedweapons_empty_shell )
 
+-- note: this looks like a node-cleanup for hidden doorparts if the visible part gets blown away
 minetest.register_abm({
 	nodenames = {"doors:hidden"},
 	interval = 1,
@@ -169,38 +170,10 @@ minetest.register_abm({
 	action = function(pos, node)
 		pos.y = pos.y-1
 		if minetest.get_node(pos).name == "air" then
-		pos.y = pos.y+1
+			pos.y = pos.y+1
 			node.name = "air"
 			minetest.set_node(pos, node)
 		end
 	end
 })
-
-minetest.register_on_joinplayer(function(player)
-	hit = player:hud_add({
-		hud_elem_type = "image",
-		text = "rangedweapons_empty_icon.png",
-		scale = {x = 2, y = 2},
-		position = {x = 0.5, y = 0.5},
-		offset = {x = 0, y = 0},
-		alignment = {x = 0, y = 0}
-	})
-	scope_hud = player:hud_add({
-		hud_elem_type = "image",
-		position = { x=0.5, y=0.5 },
-		scale = { x=-100, y=-100 },
-		text = "rangedweapons_empty_icon.png",
-	})
-end)
-
-local timer = 0
-minetest.register_globalstep(function(dtime)
-	timer = timer + dtime;
-	if timer >= 1.0 then
-		for _, player in pairs(minetest.get_connected_players()) do
-			player:hud_change(hit, "text", "rangedweapons_empty_icon.png")
-			timer = 0
-		end
-	end
-end)
 

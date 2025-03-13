@@ -1,7 +1,3 @@
-forbidden_ents = {
-"",
-}
-
 
 minetest.register_alias("rangedweapons:726mm", "rangedweapons:762mm")
 
@@ -11,380 +7,431 @@ minetest.register_craftitem("rangedweapons:shot_bullet_visual", {
 })
 
 
+-- playername -> hit
+local hud_data = {}
+
+minetest.register_on_joinplayer(function(player)
+	local hit = player:hud_add({
+		hud_elem_type = "image",
+		text = "rangedweapons_empty_icon.png",
+		scale = {x = 2, y = 2},
+		position = {x = 0.5, y = 0.5},
+		offset = {x = 0, y = 0},
+		alignment = {x = 0, y = 0}
+	})
+	hud_data[player:get_player_name()] = hit
+end)
+
+local timer = 0
+minetest.register_globalstep(function(dtime)
+	timer = timer + dtime;
+	if timer >= 1.0 then
+		for _, player in pairs(minetest.get_connected_players()) do
+			local hit = hud_data[player:get_player_name()]
+			player:hud_change(hit, "text", "rangedweapons_empty_icon.png")
+		end
+		timer = 0
+	end
+end)
+
+
 local rangedweapons_shot_bullet = {
 	timer = 0,
-initial_properties = {
-	physical = true,
-	hp_max = 420,
-	glow = 100,
-	visual = "wielditem",
-	visual_size = {x=0.75, y=0.75},
-	textures = {"rangedweapons:shot_bullet_visual"},
-	lastpos = {},
-        collide_with_objects = true,
-	collisionbox = {-0.0025, -0.0025, -0.0025, 0.0025, 0.0025, 0.0025},
-},
+	initial_properties = {
+		physical = true,
+		hp_max = 420,
+		glow = 100,
+		visual = "wielditem",
+		visual_size = {x=0.75, y=0.75},
+		textures = {"rangedweapons:shot_bullet_visual"},
+		lastpos = {},
+		collide_with_objects = true,
+		collisionbox = {-0.0025, -0.0025, -0.0025, 0.0025, 0.0025, 0.0025},
+	}
 }
 
 local use_particles = minetest.settings:get_bool("rangedweapons_impact_particles", true)
 local max_lifetime = tonumber(minetest.settings:get("rangedweapons_bullet_lifetime")) or 10.0
 
 rangedweapons_shot_bullet.on_step = function(self, dtime, moveresult)
-----------------------------------------
----------------------------------------
-
-if self.owner == nil then
-	self.object:remove()
-	return
-end
-
-local sparks = self.sparks or 0
-local ignite = self.ignite or 0
-local size = self.size or 0.0025
-
-local SBP = self.bullet_particles
-if SBP ~= nil then
-for i=1,math.random(SBP.amount[1],SBP.amount[2]) do
-	minetest.add_particle({
-		pos = {x=self.object:get_pos().x+(math.random(-SBP.pos_randomness,SBP.pos_randomness)/100),y=self.object:get_pos().y+(math.random(-SBP.pos_randomness,SBP.pos_randomness)/100),z=self.object:get_pos().z+(math.random(-SBP.pos_randomness,SBP.pos_randomness)/100)},
-		velocity = {x=math.random(-SBP.velocity.x,SBP.velocity.x), y=math.random(-SBP.velocity.y,SBP.velocity.y), z=math.random(-SBP.velocity.z,SBP.velocity.z)},
-		acceleration = {x=math.random(-SBP.acceleration.x,SBP.acceleration.x), y=math.random(-SBP.acceleration.y,SBP.acceleration.y)-SBP.gravity, z=math.random(-SBP.acceleration.z,SBP.acceleration.z)},
-		expirationtime = SBP.lifetime,
-		size = math.random(SBP.minsize,SBP.maxsize)/10,
-		collisiondetection = SBP.collisiondetection,
-		vertical = false,
-		texture = SBP.texture,
-          animation = {type="vertical_frames", aspect_w=8, aspect_h=8, length = SBP.lifetime+0.1,},
-		glow = SBP.glow,
-	})
-end end
-
-
-self.timer = self.timer + dtime
-
-if self.timer >= 0 then
-self.object:set_properties({collide_with_objects = true})
-self.object:set_properties({collisionbox = {-size, -size, -size, size, size, size}})
-end
-
-if self.timer > max_lifetime then
-self.object:remove()
-end
-
-if moveresult.collides == true then
-if moveresult.collisions[1] ~= nil then
-
-local mobPen = self.mobPen or 0
-local nodePen = self.nodePen or 0
-local door_break = self.door_break or 0
-local glass_break = self.glass_break or 0
-
-if moveresult.collisions[1].type == "node" then
-
-minetest.check_for_falling(moveresult.collisions[1].node_pos)
-
-
-if use_particles and
-minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name]  and
-minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name].tiles and
-minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name].tiles[1]
-then
-
-local hit_texture = minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name].tiles[1]
-
-if hit_texture.name ~= nil then
-hit_texture = hit_texture.name
-end
-
-	minetest.add_particle({
-		pos = self.object:get_pos(),
-		velocity = {x=0, y=0, z=0},
-          	acceleration = {x=0, y=0, z=0},
-		expirationtime = 30,
-		size = math.random(10,20)/10,
-		collisiondetection = false,
-		vertical = false,
-		texture = "rangedweapons_bullethole.png",
-		glow = 0,
-	})
-
-	for i=1,math.random(4,8) do
-	minetest.add_particle({
-		pos = self.object:get_pos(),
-		velocity = {x=math.random(-3.0,3.0), y=math.random(2.0,5.0), z=math.random(-3.0,3.0)},
-          	acceleration = {x=math.random(-3.0,3.0), y=math.random(-10.0,-15.0), z=math.random(-3.0,3.0)},
-		expirationtime = 0.5,
-		size = math.random(10,20)/10,
-		collisiondetection = true,
-		vertical = false,
-		texture = ""..hit_texture.."^[resize:4x4".."",
-		glow = 0,
-	})
+	if self.owner == nil then
+		self.object:remove()
+		return
 	end
 
-end 
+	local sparks = self.sparks or 0
+	local ignite = self.ignite or 0
+	local size = self.size or 0.0025
 
-
-minetest.sound_play("default_dig_cracky", {pos = self.object:get_pos(), gain = 1.0}, true)
-
-if ignite > 0 then
-
-if minetest.get_node(moveresult.collisions[1].node_pos).name == "rangedweapons:barrel" then
-minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
-tnt.boom(moveresult.collisions[1].node_pos, {radius = 3})
-end 
-
-if minetest.get_node(moveresult.collisions[1].node_pos).name == "tnt:tnt" then
-minetest.swap_node(moveresult.collisions[1].node_pos, {name = "tnt:tnt_burning"})
-	minetest.sound_play("tnt_ignite", {pos = moveresult.collisions[1].node_pos}, true)
-	minetest.get_node_timer(moveresult.collisions[1].node_pos):start(3)
-	minetest.check_for_falling(moveresult.collisions[1].node_pos)
-end
-
-end
-
-
-if door_break > 0 and minetest.settings:get_bool("rangedweapons_door_breaking", true) then
-
-if string.find(minetest.get_node(moveresult.collisions[1].node_pos).name,"door_wood") then
-
-minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
-minetest.add_item(moveresult.collisions[1].node_pos, "default:wood 5")
-minetest.sound_play("rangedweapons_woodbreak",{pos = moveresult.collisions[1].node_pos}, true)
-
-end end
-
-if glass_break > 0 and minetest.settings:get_bool("rangedweapons_glass_breaking", true) then
-	
-local nodeName = minetest.get_node(moveresult.collisions[1].node_pos).name
-
-	if nodeName == "default:glass" then
-	minetest.swap_node(moveresult.collisions[1].node_pos, {name = "rangedweapons:broken_glass"})
-minetest.sound_play("glass_break",{pos = moveresult.collisions[1].node_pos}, true)
-	end
-	if   nodeName == "xpanes:pane" or
-		nodeName == "xpanes:pane_flat" then
-minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
-minetest.add_item(moveresult.collisions[1].node_pos, "rangedweapons:glass_shards")
-minetest.sound_play("glass_break",{pos = moveresult.collisions[1].node_pos}, true)
-	end
-if string.find(nodeName,"door_glass") then
-minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
-minetest.add_item(moveresult.collisions[1].node_pos, "vessels:glass_fragments 5")
-minetest.sound_play("glass_break",{pos = moveresult.collisions[1].node_pos}, true)
-	end
-end
-
-
-if minetest.get_item_group(minetest.get_node(moveresult.collisions[1].node_pos).name, "level") > 1  then
-   if minetest.settings:get_bool("rangedweapons_bullet_ricochet", true) then
-      self.object:set_velocity(moveresult.collisions[1].old_velocity)
-
-      if sparks > 0 then
-      	 rangedweapons.make_sparks(self.object:get_pos())
-      end
-
-      local objVel = moveresult.collisions[1].old_velocity
-      local objRot = self.object:get_rotation()
-
-      if objRot and objVel then
-      	 if moveresult.collisions[1].axis == "x" then
-	    self.object:set_rotation({x=0,y=objRot.y,z=objRot.z+3})
-	    self.object:set_velocity({x=objVel.x*-1,y=objVel.y,z=objVel.z})
-	 end
-
-	 if moveresult.collisions[1].axis == "z" then
-	    self.object:set_rotation({x=0,y=objRot.y,z=objRot.z+3})
-	    self.object:set_velocity({x=objVel.x,y=objVel.y,z=objVel.z*-1})
-	 end
-
-	 if moveresult.collisions[1].axis == "y" then
-	    self.object:set_rotation({x=0,y=objRot.y+3,z=objRot.z+3})
-	    self.object:set_velocity({x=objVel.x,y=objVel.y*-1,z=objVel.z})
-	 end
-      end
-   else
-	self.object:remove()
-   end
-
-else
-
-if math.random(1,100) <= nodePen then
-   if use_particles then
-	for i=1,10 do
-	minetest.add_particle({
-		pos = self.object:get_pos(),
-		velocity = {x=1.5, y=1.5, z=1.5} ,
-          	acceleration = {x=math.random(-3.0,3.0), y=math.random(-4.0,4.0), z=math.random(-3.0,3.0)},
-		expirationtime = 1.25,
-		size = math.random(3,6),
-		collisiondetection = false,
-		vertical = false,
-		texture = "tnt_smoke.png",
-		glow = 2,
-	})
-	end
-    end
-minetest.sound_play("default_dig_cracky", {pos = self.object:get_pos(), gain = 1.0}, true)
-self.object:set_properties({collisionbox = {0,0,0,0,0,0}})
---minetest.chat_send_all("hit")
-self.object:set_velocity(moveresult.collisions[1].old_velocity)
-else
-
-if minetest.get_item_group(minetest.get_node(moveresult.collisions[1].node_pos).name, "leaves") > 0  then
-
-minetest.sound_play("default_dig_snappy", {pos = self.object:get_pos(), gain = 1.5}, true)
-
-if use_particles then
-for i = 1,math.random(3,6) do
-	minetest.add_particle({
-		pos = self.object:get_pos(),
-		velocity = {x=math.random(-2,2), y=math.random(3,6), z=math.random(-2,2)},
-          acceleration = {x=math.random(-2,2), y=math.random(-3,-6), z=math.random(-2,2)},
-		expirationtime = math.random(2,4), 
-		size = math.random(6,9), 
-		collisiondetection = true,
-		collision_removal = false,
-		vertical = false,
-		texture = "rangedweapons_leaf.png",
-          animation = {type="vertical_frames", aspect_w=8, aspect_h=8, length = 0.8,},
-		glow = 15,
-	})
-end
-end
-
-self.object:set_properties({collisionbox = {0,0,0,0,0,0}})
-self.object:set_velocity(moveresult.collisions[1].old_velocity)
-
-else
-if self.OnCollision ~= nil then
-self.OnCollision(self.owner,self,moveresult.collisions[1])
-end
-self.object:remove()
-end
-end
-end
-
-end
-
-if moveresult.collisions[1].type == "object" and (not moveresult.collisions[1].object:is_player() or moveresult.collisions[1].object:get_player_name() ~= self.owner) then
-
-
-local actualDamage = self.damage or {fleshy=1}
-local damage = {}
-local crit = self.crit or 0
-local critEffc = self.critEffc or 1
-local owner = minetest.get_player_by_name(self.owner)
-local hit_texture = "rangedweapons_hit.png"
-local dps = self.dps or 0
-local skill = self.skill_value or 1
-
-for _, dmg in pairs(actualDamage) do
-    damage[_] = actualDamage[_]
-end
-
-local player_dmg_multiplier = tonumber(minetest.settings:get("rangedweapons_player_dmg_multiplier")) or 1.0
-local headshot_dmg_multiplier = tonumber(minetest.settings:get("rangedweapons_headshot_dmg_multiplier")) or 1.75
-local mob_dmg_multiplier = tonumber(minetest.settings:get("rangedweapons_mob_dmg_multiplier")) or 1.0
-
-if moveresult.collisions[1].object:is_player() then
-   for _, player_dmg in pairs(damage) do
-       damage[_] = damage[_] * player_dmg_multiplier
-   end
-   if self.object:get_pos().y - moveresult.collisions[1].object:get_pos().y > 1.5 then
-      for _, hs_dmg in pairs(damage) do
-      	  damage[_] = damage[_] * headshot_dmg_multiplier
-      end
-   end 
-   knockback = damage.knockback or 0
-   projectile_kb(moveresult.collisions[1].object,self.object,knockback)
-else
-   for _, mob_dmg in pairs(damage) do
-       damage[_] = damage[_] * mob_dmg_multiplier
-   end
-end
-
-for _, bonus_dmg in pairs(damage) do
-    damage[_] = (damage[_]*skill) + (self.dps*self.timer)
-end
-
---minetest.chat_send_all(critEffc)
-if math.random(1,100) <= crit+((skill*10)-10) then
-   for _, critDmg in pairs(damage) do
-       damage[_] = damage[_] * critEffc
-   end
-
-
-   local entpos = self.object:get_pos()
-   minetest.add_particle	({
-   	pos = entpos, velocity = 0, acceleration = {x=0, y=5, z=0},
-	expirationtime = 0.75, size = 12, collisiondetection = false,
-	vertical = false, texture = "rangedweapons_crit.png", glow = 30,})
-	hit_texture = "rangedweapons_crithit.png"
-   end
-
-moveresult.collisions[1].object:punch(owner, 1.0, {
-		full_punch_interval = 1.0,
-		damage_groups = damage,}, nil)
-owner:hud_change(hit, "text", hit_texture)
-
-	local bloodyness = tonumber(minetest.settings:get("rangedweapons_bloodyness")) or 10
-	for i=1,math.random(math.ceil(bloodyness*0.66),math.ceil(bloodyness*1.5)) do
-	minetest.add_particle({
-		pos = self.object:get_pos(),
-		velocity = {x=math.random(-15.0,15.0)/10, y=math.random(2.0,5.0), z=math.random(-15.0,15.0)/10},
-          	acceleration = {x=math.random(-3.0,3.0), y=math.random(-10.0,-15.0), z=math.random(-3.0,3.0)},
-		expirationtime = 0.75,
-		size = math.random(10,20)/10,
-		collisiondetection = true,
-		vertical = false,
-		texture = "rangedweapons_blood.png",
-          animation = {type="vertical_frames", aspect_w=8, aspect_h=8, length = 0.8,},
-		glow = 0,
-	})
+	local SBP = self.bullet_particles
+	if SBP ~= nil then
+		for i=1,math.random(SBP.amount[1],SBP.amount[2]) do
+			minetest.add_particle({
+				pos = {
+					x=self.object:get_pos().x+(math.random(-SBP.pos_randomness,SBP.pos_randomness)/100),y=self.object:get_pos().
+					y+(math.random(-SBP.pos_randomness,SBP.pos_randomness)/100),z=self.object:get_pos().
+					z+(math.random(-SBP.pos_randomness,SBP.pos_randomness)/100)
+				},
+				velocity = {
+					x=math.random(-SBP.velocity.x,SBP.velocity.x),
+					y=math.random(-SBP.velocity.y,SBP.velocity.y),
+					z=math.random(-SBP.velocity.z,SBP.velocity.z)
+				},
+				acceleration = {
+					x=math.random(-SBP.acceleration.x,SBP.acceleration.x),
+					y=math.random(-SBP.acceleration.y,SBP.acceleration.y)-SBP.gravity,
+					z=math.random(-SBP.acceleration.z,SBP.acceleration.z)
+				},
+				expirationtime = SBP.lifetime,
+				size = math.random(SBP.minsize,SBP.maxsize)/10,
+				collisiondetection = SBP.collisiondetection,
+				vertical = false,
+				texture = SBP.texture,
+				animation = {
+					type="vertical_frames",
+					aspect_w=8,
+					aspect_h=8,
+					length = SBP.lifetime+0.1
+				},
+				glow = SBP.glow
+			})
+		end
 	end
 
-
-if math.random(1,100) <= mobPen then
-   if use_particles then
-	for i=1,10 do
-	minetest.add_particle({
-		pos = self.object:get_pos(),
-		velocity = {x=1.5, y=1.5, z=1.5} ,
-          	acceleration = {x=math.random(-3.0,3.0), y=math.random(-4.0,4.0), z=math.random(-3.0,3.0)},
-		expirationtime = 1.25,
-		size = math.random(3,6),
-		collisiondetection = false,
-		vertical = false,
-		texture = "tnt_smoke.png",
-		glow = 2,
-	})
+	self.timer = self.timer + dtime
+	if self.timer >= 0 then
+		self.object:set_properties({collide_with_objects = true})
+		self.object:set_properties({collisionbox = {-size, -size, -size, size, size, size}})
 	end
-    end
-minetest.sound_play("default_dig_cracky", {pos = self.object:get_pos(), gain = 1.0}, true)
-self.object:set_properties({collisionbox = {0,0,0,0,0,0}})
-self.object:set_velocity(moveresult.collisions[1].old_velocity)
-else
-if self.OnCollision ~= nil then
-self.OnCollision(self.owner,self,moveresult.collisions[1])
+
+	if self.timer > max_lifetime then
+		self.object:remove()
+	end
+
+	if moveresult.collides == true then
+		if moveresult.collisions[1] ~= nil then
+			local mobPen = self.mobPen or 0
+			local nodePen = self.nodePen or 0
+			local door_break = self.door_break or 0
+			local glass_break = self.glass_break or 0
+
+			if moveresult.collisions[1].type == "node" then
+				minetest.check_for_falling(moveresult.collisions[1].node_pos)
+
+				if use_particles and
+					minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name]  and
+					minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name].tiles and
+					minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name].tiles[1] then
+
+					local hit_texture = minetest.registered_nodes[minetest.get_node(moveresult.collisions[1].node_pos).name].tiles[1]
+					if hit_texture.name ~= nil then
+						hit_texture = hit_texture.name
+					end
+
+					minetest.add_particle({
+						pos = self.object:get_pos(),
+						velocity = {x=0, y=0, z=0},
+						acceleration = {x=0, y=0, z=0},
+						expirationtime = 30,
+						size = math.random(10,20)/10,
+						collisiondetection = false,
+						vertical = false,
+						texture = "rangedweapons_bullethole.png",
+						glow = 0,
+					})
+
+					for i=1,math.random(4,8) do
+						minetest.add_particle({
+							pos = self.object:get_pos(),
+							velocity = {
+								x=math.random(-3.0,3.0),
+								y=math.random(2.0,5.0),
+								z=math.random(-3.0,3.0)
+							},
+							acceleration = {
+								x=math.random(-3.0,3.0),
+								y=math.random(-10.0,-15.0),
+								z=math.random(-3.0,3.0)
+							},
+							expirationtime = 0.5,
+							size = math.random(10,20)/10,
+							collisiondetection = true,
+							vertical = false,
+							texture = ""..hit_texture.."^[resize:4x4".."",
+							glow = 0
+						})
+					end
+				end
+
+				minetest.sound_play("default_dig_cracky", {pos = self.object:get_pos(), gain = 1.0}, true)
+
+				if ignite > 0 then
+					if minetest.get_node(moveresult.collisions[1].node_pos).name == "rangedweapons:barrel" then
+						minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
+						tnt.boom(moveresult.collisions[1].node_pos, {radius = 3})
+					end
+
+					if minetest.get_node(moveresult.collisions[1].node_pos).name == "tnt:tnt" then
+						minetest.swap_node(moveresult.collisions[1].node_pos, {name = "tnt:tnt_burning"})
+						minetest.sound_play("tnt_ignite", {pos = moveresult.collisions[1].node_pos}, true)
+						minetest.get_node_timer(moveresult.collisions[1].node_pos):start(3)
+						minetest.check_for_falling(moveresult.collisions[1].node_pos)
+					end
+				end
+
+				if door_break > 0 and minetest.settings:get_bool("rangedweapons_door_breaking", true) then
+					if string.find(minetest.get_node(moveresult.collisions[1].node_pos).name,"door_wood") then
+						minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
+						minetest.add_item(moveresult.collisions[1].node_pos, "default:wood 5")
+						minetest.sound_play("rangedweapons_woodbreak",{pos = moveresult.collisions[1].node_pos}, true)
+					end
+				end
+
+				if glass_break > 0 and minetest.settings:get_bool("rangedweapons_glass_breaking", true) then
+					local nodeName = minetest.get_node(moveresult.collisions[1].node_pos).name
+					if nodeName == "default:glass" then
+						minetest.swap_node(moveresult.collisions[1].node_pos, {name = "rangedweapons:broken_glass"})
+						minetest.sound_play("glass_break",{pos = moveresult.collisions[1].node_pos}, true)
+					end
+					if nodeName == "xpanes:pane" or nodeName == "xpanes:pane_flat" then
+						minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
+						minetest.add_item(moveresult.collisions[1].node_pos, "rangedweapons:glass_shards")
+						minetest.sound_play("glass_break",{pos = moveresult.collisions[1].node_pos}, true)
+					end
+					if string.find(nodeName,"door_glass") then
+						minetest.swap_node(moveresult.collisions[1].node_pos, {name = "air"})
+						minetest.add_item(moveresult.collisions[1].node_pos, "vessels:glass_fragments 5")
+						minetest.sound_play("glass_break",{pos = moveresult.collisions[1].node_pos}, true)
+					end
+				end
+
+				if minetest.get_item_group(minetest.get_node(moveresult.collisions[1].node_pos).name, "level") > 1  then
+					if minetest.settings:get_bool("rangedweapons_bullet_ricochet", true) then
+						self.object:set_velocity(moveresult.collisions[1].old_velocity)
+
+						if sparks > 0 then
+							rangedweapons.make_sparks(self.object:get_pos())
+						end
+
+						local objVel = moveresult.collisions[1].old_velocity
+						local objRot = self.object:get_rotation()
+
+						if objRot and objVel then
+							if moveresult.collisions[1].axis == "x" then
+								self.object:set_rotation({x=0,y=objRot.y,z=objRot.z+3})
+								self.object:set_velocity({x=objVel.x*-1,y=objVel.y,z=objVel.z})
+							end
+
+							if moveresult.collisions[1].axis == "z" then
+								self.object:set_rotation({x=0,y=objRot.y,z=objRot.z+3})
+								self.object:set_velocity({x=objVel.x,y=objVel.y,z=objVel.z*-1})
+							end
+
+							if moveresult.collisions[1].axis == "y" then
+								self.object:set_rotation({x=0,y=objRot.y+3,z=objRot.z+3})
+								self.object:set_velocity({x=objVel.x,y=objVel.y*-1,z=objVel.z})
+							end
+						end
+					else
+						self.object:remove()
+					end
+				else
+					if math.random(1,100) <= nodePen then
+						if use_particles then
+							for i=1,10 do
+								minetest.add_particle({
+									pos = self.object:get_pos(),
+									velocity = {
+										x=1.5,
+										y=1.5,
+										z=1.5
+									},
+									acceleration = {
+										x=math.random(-3.0,3.0),
+										y=math.random(-4.0,4.0),
+										z=math.random(-3.0,3.0)
+									},
+									expirationtime = 1.25,
+									size = math.random(3,6),
+									collisiondetection = false,
+									vertical = false,
+									texture = "tnt_smoke.png",
+									glow = 2,
+								})
+							end
+						end
+						minetest.sound_play("default_dig_cracky", {pos = self.object:get_pos(), gain = 1.0}, true)
+						self.object:set_properties({collisionbox = {0,0,0,0,0,0}})
+						self.object:set_velocity(moveresult.collisions[1].old_velocity)
+					else
+						if minetest.get_item_group(minetest.get_node(moveresult.collisions[1].node_pos).name, "leaves") > 0  then
+							minetest.sound_play("default_dig_snappy", {pos = self.object:get_pos(), gain = 1.5}, true)
+
+							if use_particles then
+								for i = 1,math.random(3,6) do
+									minetest.add_particle({
+										pos = self.object:get_pos(),
+										velocity = {
+											x=math.random(-2,2),
+											y=math.random(3,6),
+											z=math.random(-2,2)
+										},
+										acceleration = {
+											x=math.random(-2,2),
+											y=math.random(-3,-6),
+											z=math.random(-2,2)
+										},
+										expirationtime = math.random(2,4),
+										size = math.random(6,9),
+										collisiondetection = true,
+										collision_removal = false,
+										vertical = false,
+										texture = "rangedweapons_leaf.png",
+										animation = {type="vertical_frames", aspect_w=8, aspect_h=8, length = 0.8,},
+										glow = 15,
+									})
+								end
+							end
+
+							self.object:set_properties({collisionbox = {0,0,0,0,0,0}})
+							self.object:set_velocity(moveresult.collisions[1].old_velocity)
+						else
+							if self.OnCollision ~= nil then
+								self.OnCollision(self.owner,self,moveresult.collisions[1])
+							end
+							self.object:remove()
+						end
+					end
+				end
+			end
+			if moveresult.collisions[1].type == "object" and (not moveresult.collisions[1].object:is_player() or moveresult.collisions[1].object:get_player_name() ~= self.owner) then
+				local actualDamage = self.damage or {fleshy=1}
+				local damage = {}
+				local crit = self.crit or 0
+				local critEffc = self.critEffc or 1
+				local owner = minetest.get_player_by_name(self.owner)
+				local hit_texture = "rangedweapons_hit.png"
+				local dps = self.dps or 0
+				local skill = self.skill_value or 1
+
+				for i, dmg in pairs(actualDamage) do
+					damage[i] = actualDamage[i]
+				end
+
+				local player_dmg_multiplier = tonumber(minetest.settings:get("rangedweapons_player_dmg_multiplier")) or 1.0
+				local headshot_dmg_multiplier = tonumber(minetest.settings:get("rangedweapons_headshot_dmg_multiplier")) or 1.75
+				local mob_dmg_multiplier = tonumber(minetest.settings:get("rangedweapons_mob_dmg_multiplier")) or 1.0
+
+				if moveresult.collisions[1].object:is_player() then
+					for i, player_dmg in pairs(damage) do
+						damage[i] = damage[i] * player_dmg_multiplier
+					end
+					if self.object:get_pos().y - moveresult.collisions[1].object:get_pos().y > 1.5 then
+						for i, hs_dmg in pairs(damage) do
+							damage[i] = damage[i] * headshot_dmg_multiplier
+						end
+					end
+					knockback = damage.knockback or 0
+					projectile_kb(moveresult.collisions[1].object,self.object,knockback)
+				else
+					for i, mob_dmg in pairs(damage) do
+						damage[i] = damage[i] * mob_dmg_multiplier
+					end
+				end
+
+				for _, bonus_dmg in pairs(damage) do
+					damage[_] = (damage[_]*skill) + (self.dps*self.timer)
+				end
+
+				if math.random(1,100) <= crit+((skill*10)-10) then
+					for _, critDmg in pairs(damage) do
+						damage[_] = damage[_] * critEffc
+					end
+
+					local entpos = self.object:get_pos()
+					minetest.add_particle({
+						pos = entpos,
+						velocity = 0,
+						acceleration = {x=0, y=5, z=0},
+						expirationtime = 0.75,
+						size = 12,
+						collisiondetection = false,
+						vertical = false,
+						texture = "rangedweapons_crit.png",
+						glow = 30
+					})
+					hit_texture = "rangedweapons_crithit.png"
+				end
+
+				moveresult.collisions[1].object:punch(owner, 1.0, {
+					full_punch_interval = 1.0,
+					damage_groups = damage
+				}, nil)
+				local hit = hud_data[owner:get_player_name()]
+				owner:hud_change(hit, "text", hit_texture)
+
+				local bloodyness = tonumber(minetest.settings:get("rangedweapons_bloodyness")) or 10
+				for i=1,math.random(math.ceil(bloodyness*0.66),math.ceil(bloodyness*1.5)) do
+					minetest.add_particle({
+						pos = self.object:get_pos(),
+						velocity = {
+							x=math.random(-15.0,15.0)/10,
+							y=math.random(2.0,5.0),
+							z=math.random(-15.0,15.0)/10
+						},
+						acceleration = {
+							x=math.random(-3.0,3.0),
+							y=math.random(-10.0,-15.0),
+							z=math.random(-3.0,3.0)
+						},
+						expirationtime = 0.75,
+						size = math.random(10,20)/10,
+						collisiondetection = true,
+						vertical = false,
+						texture = "rangedweapons_blood.png",
+						animation = {
+							type="vertical_frames",
+							aspect_w=8,
+							aspect_h=8,
+							length = 0.8
+						},
+						glow = 0,
+					})
+				end
+
+				if math.random(1,100) <= mobPen then
+					if use_particles then
+						for i=1,10 do
+							minetest.add_particle({
+								pos = self.object:get_pos(),
+								velocity = {x=1.5, y=1.5, z=1.5} ,
+								acceleration = {x=math.random(-3.0,3.0), y=math.random(-4.0,4.0), z=math.random(-3.0,3.0)},
+								expirationtime = 1.25,
+								size = math.random(3,6),
+								collisiondetection = false,
+								vertical = false,
+								texture = "tnt_smoke.png",
+								glow = 2,
+							})
+						end
+					end
+					minetest.sound_play("default_dig_cracky", {pos = self.object:get_pos(), gain = 1.0}, true)
+					self.object:set_properties({collisionbox = {0,0,0,0,0,0}})
+					self.object:set_velocity(moveresult.collisions[1].old_velocity)
+				else
+					if self.OnCollision ~= nil then
+						self.OnCollision(self.owner,self,moveresult.collisions[1])
+					end
+					self.object:remove()
+				end
+			end
+		else
+			self.object:remove()
+		end
+	end
 end
-self.object:remove()
-end
-end
 
-
-else
-
-self.object:remove()
-
-end
-end
-
-end
-
-minetest.register_entity("rangedweapons:shot_bullet", rangedweapons_shot_bullet) 
-
-
+minetest.register_entity("rangedweapons:shot_bullet", rangedweapons_shot_bullet)
 
 ---
 --- actual mags
@@ -412,7 +459,7 @@ local rangedweapons_mag = {
 	lastpos= {},
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
-rangedweapons_mag.on_step = function(self, dtime, pos)
+rangedweapons_mag.on_step = function(self, dtime)
 	self.timer = self.timer + dtime
 	local pos = self.object:get_pos()
 	local node = minetest.get_node(pos)
@@ -480,7 +527,7 @@ minetest.register_craftitem("rangedweapons:45acp", {
 	stack_max= 450,
 	wield_scale = {x=0.4,y=0.4,z=1.2},
 		description = "" ..core.colorize("#35cdff",".45ACP catridge\n")..core.colorize("#FFFFFF", "Bullet damage: 2 \n") ..core.colorize("#FFFFFF", "Bullet crit efficiency: 0.50 \n") ..core.colorize("#FFFFFF", "Bullet crit chance: 2% \n")
-..core.colorize("#FFFFFF", "Bullet velocity: 20 \n") 
+..core.colorize("#FFFFFF", "Bullet velocity: 20 \n")
 ..core.colorize("#FFFFFF", "Bullet knockback: 2 \n") ..core.colorize("#FFFFFF", "Ammunition for some guns"),
 	inventory_image = "rangedweapons_45acp.png",
 	RW_ammo_capabilities = {
@@ -503,7 +550,7 @@ minetest.register_craftitem("rangedweapons:45acp", {
 minetest.register_craftitem("rangedweapons:10mm", {
 	stack_max= 400,
 	wield_scale = {x=0.4,y=0.4,z=1.2},
-		description = "" ..core.colorize("#35cdff","10mm Auto\n")..core.colorize("#FFFFFF", "Bullet damage: 2 \n") ..core.colorize("#FFFFFF", "Bullet crit efficiency:0.30 \n") ..core.colorize("#FFFFFF", "Bullet velocity: 25 \n") 
+		description = "" ..core.colorize("#35cdff","10mm Auto\n")..core.colorize("#FFFFFF", "Bullet damage: 2 \n") ..core.colorize("#FFFFFF", "Bullet crit efficiency:0.30 \n") ..core.colorize("#FFFFFF", "Bullet velocity: 25 \n")
 ..core.colorize("#FFFFFF", "Bullet knockback: 1 \n")  ..core.colorize("#FFFFFF", "Bullet crit chance: 1% \n") ..core.colorize("#FFFFFF", "Ammunition for some guns"),
 	inventory_image = "rangedweapons_10mm.png",
 	RW_ammo_capabilities = {
