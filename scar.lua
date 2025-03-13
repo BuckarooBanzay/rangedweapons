@@ -63,7 +63,7 @@ minetest.register_tool("rangedweapons:scar_rrr", {
 		gun_sound = "rangedweapons_ak",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 	inventory_image = "rangedweapons_scar.png",

@@ -40,7 +40,7 @@ minetest.register_tool("rangedweapons:m60_r", {
 		gun_sound = "rangedweapons_machinegun",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 

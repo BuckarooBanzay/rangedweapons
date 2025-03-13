@@ -57,14 +57,14 @@ if player:get_wielded_item():get_definition().RW_gun_capabilities then
 if
 player:get_wielded_item():get_definition().RW_gun_capabilities.automatic_gun and player:get_wielded_item():get_definition().RW_gun_capabilities.automatic_gun > 0 then
 
-rangedweapons_shoot_gun(itemstack, player)
+rangedweapons.shoot_gun(itemstack, player)
 player:set_wielded_item(itemstack)
 end end
 
 if player:get_wielded_item():get_definition().RW_powergun_capabilities then
 if player:get_wielded_item():get_definition().RW_powergun_capabilities.automatic_gun and player:get_wielded_item():get_definition().RW_powergun_capabilities.automatic_gun > 0 then
 
-rangedweapons_shoot_powergun(itemstack, player)
+rangedweapons.shoot_powergun(itemstack, player)
 player:set_wielded_item(itemstack)
 end end
 

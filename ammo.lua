@@ -181,7 +181,7 @@ if minetest.get_item_group(minetest.get_node(moveresult.collisions[1].node_pos).
       self.object:set_velocity(moveresult.collisions[1].old_velocity)
 
       if sparks > 0 then
-      	 make_sparks(self.object:get_pos())
+      	 rangedweapons.make_sparks(self.object:get_pos())
       end
 
       local objVel = moveresult.collisions[1].old_velocity

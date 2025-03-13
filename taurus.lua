@@ -37,11 +37,11 @@ RW_gun_capabilities = {
 		gun_sound = "rangedweapons_deagle",
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_gun(itemstack, user)
+rangedweapons.shoot_gun(itemstack, user)
 return itemstack
 	end,
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_single_load_gun(itemstack, user)
+rangedweapons.single_load_gun(itemstack, user)
 return itemstack
 end,
 })

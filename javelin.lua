@@ -48,7 +48,7 @@ javStack = {name="rangedweapons:javelin",wear=(bullet.wear)+(65535/throwDur)}
 minetest.add_item(bullet.object:get_pos(),javStack) end end,
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })

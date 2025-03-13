@@ -33,7 +33,7 @@ if math.random(1, 100) <= 10 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:wooden_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })
@@ -72,7 +72,7 @@ if math.random(1, 100) <= 15 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:stone_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })
@@ -111,7 +111,7 @@ if math.random(1, 100) <= 35 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:steel_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })
@@ -149,7 +149,7 @@ if math.random(1, 100) <= 30 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:bronze_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })
@@ -187,7 +187,7 @@ if math.random(1, 100) <= 25 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:golden_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })
@@ -225,7 +225,7 @@ if math.random(1, 100) <= 50 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:mese_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })
@@ -263,7 +263,7 @@ if math.random(1, 100) <= 60 then
 minetest.add_item(bullet.object:get_pos(), "rangedweapons:diamond_shuriken") end end,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_yeet(itemstack, user)
+rangedweapons.yeet(itemstack, user)
 return itemstack
 	end,
 })

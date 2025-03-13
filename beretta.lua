@@ -46,11 +46,11 @@ RW_gun_capabilities = {
 		gun_sound = "rangedweapons_beretta",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_gun(itemstack, user)
+rangedweapons.shoot_gun(itemstack, user)
 return itemstack
 	end,
 })

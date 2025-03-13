@@ -36,11 +36,11 @@ RW_gun_capabilities = {
 		gun_unload_sound = "rangedweapons_shell_insert",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_single_load_gun(itemstack, user, "")
+rangedweapons.single_load_gun(itemstack, user, "")
 return itemstack
 end,
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_gun(itemstack, user)
+rangedweapons.shoot_gun(itemstack, user)
 return itemstack
 	end,
 })
@@ -56,7 +56,7 @@ minetest.register_tool("rangedweapons:benelli_uld", {
 		minetest.sound_play("rangedweapons_empty", {pos = user:get_pos()}, true)
 	end,
 on_secondary_use = function(itemstack, user, pointed_thing)
-eject_shell(itemstack,user,"rangedweapons:benelli_rld",0.6,"rangedweapons_shotgun_reload_a","rangedweapons:empty_shell")
+rangedweapons.eject_shell(itemstack,user,"rangedweapons:benelli_rld",0.6,"rangedweapons_shotgun_reload_a","rangedweapons:empty_shell")
 return itemstack
 end,
 })

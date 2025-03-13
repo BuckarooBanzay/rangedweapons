@@ -32,7 +32,7 @@ RW_powergun_capabilities = {
 		ignites_explosives = 1,
 	},
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_powergun(itemstack, user)
+rangedweapons.shoot_powergun(itemstack, user)
 return itemstack
 	end,
 

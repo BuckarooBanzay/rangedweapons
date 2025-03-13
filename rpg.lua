@@ -23,11 +23,11 @@ minetest.register_tool("rangedweapons:rpg_rld", {
 		gun_sound = "rangedweapons_rocket",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_gun(itemstack, user)
+rangedweapons.shoot_gun(itemstack, user)
 return itemstack
 	end,
 })
@@ -57,11 +57,11 @@ minetest.register_tool("rangedweapons:rpg", {
 		gun_unload_sound = "rangedweapons_shell_insert",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_gun(itemstack, user)
+rangedweapons.shoot_gun(itemstack, user)
 return itemstack
 	end,
 })

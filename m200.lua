@@ -12,7 +12,7 @@ minetest.register_tool("rangedweapons:m200_uld", {
 		minetest.sound_play("rangedweapons_empty", {pos = user:get_pos()}, true)
 	end,
 on_secondary_use = function(itemstack, user, pointed_thing)
-eject_shell(itemstack,user,"rangedweapons:m200_rld",1.0,"rangedweapons_rifle_reload_a","rangedweapons:empty_shell")
+rangedweapons.eject_shell(itemstack,user,"rangedweapons:m200_rld",1.0,"rangedweapons_rifle_reload_a","rangedweapons:empty_shell")
 return itemstack
 end,
 })
@@ -89,11 +89,11 @@ RW_gun_capabilities = {
 		gun_sound = "rangedweapons_rifle_b",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 	on_use = function(itemstack, user, pointed_thing)
-rangedweapons_shoot_gun(itemstack, user)
+rangedweapons.shoot_gun(itemstack, user)
 return itemstack
 	end,
 

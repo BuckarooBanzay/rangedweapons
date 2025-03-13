@@ -64,7 +64,7 @@ minetest.register_craftitem("rangedweapons:tec9_rrr", {
 		gun_sound = "rangedweapons_machine_pistol",
 	},
 	on_secondary_use = function(itemstack, user, pointed_thing)
-rangedweapons_reload_gun(itemstack, user)
+rangedweapons.reload_gun(itemstack, user)
 return itemstack
 end,
 })
